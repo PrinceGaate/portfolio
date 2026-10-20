@@ -1,0 +1,21 @@
+.os-scanlines-container {
+  position: relative;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 15, 10, 0.5);
+  border-left: 1px solid rgba(51, 255, 51, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(51, 255, 51, 0.3);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(51, 255, 51, 0.6);
+}

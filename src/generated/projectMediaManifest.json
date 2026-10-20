@@ -1,0 +1,105 @@
+{
+  "animal-injury": [
+    {
+      "id": "animal-injury-screenshot-2026-10-20-034747",
+      "projectSlug": "animal-injury",
+      "type": "image",
+      "src": "/media/animal-injury/Screenshot 2026-10-20 034747.png",
+      "filename": "Screenshot 2026-10-20 034747.png",
+      "title": "Screenshot 2026 10 20 034747"
+    },
+    {
+      "id": "animal-injury-screenshot-2026-10-20-034757",
+      "projectSlug": "animal-injury",
+      "type": "image",
+      "src": "/media/animal-injury/Screenshot 2026-10-20 034757.png",
+      "filename": "Screenshot 2026-10-20 034757.png",
+      "title": "Screenshot 2026 10 20 034757"
+    },
+    {
+      "id": "animal-injury-screenshot-2026-10-20-034819",
+      "projectSlug": "animal-injury",
+      "type": "image",
+      "src": "/media/animal-injury/Screenshot 2026-10-20 034819.png",
+      "filename": "Screenshot 2026-10-20 034819.png",
+      "title": "Screenshot 2026 10 20 034819"
+    }
+  ],
+  "cinematch": [
+    {
+      "id": "cinematch-01-homepage",
+      "projectSlug": "cinematch",
+      "type": "image",
+      "src": "/media/cinematch/01-homepage.png",
+      "filename": "01-homepage.png",
+      "title": "01 Homepage"
+    },
+    {
+      "id": "cinematch-02-similar-movies",
+      "projectSlug": "cinematch",
+      "type": "image",
+      "src": "/media/cinematch/02-similar-movies.png",
+      "filename": "02-similar-movies.png",
+      "title": "02 Similar Movies"
+    },
+    {
+      "id": "cinematch-03-mood-discovery",
+      "projectSlug": "cinematch",
+      "type": "image",
+      "src": "/media/cinematch/03-mood-discovery.png",
+      "filename": "03-mood-discovery.png",
+      "title": "03 Mood Discovery"
+    },
+    {
+      "id": "cinematch-04-cinematch-tutorial-1",
+      "projectSlug": "cinematch",
+      "type": "video",
+      "src": "/media/cinematch/04-cinematch-tutorial-1.mp4",
+      "filename": "04-cinematch-tutorial-1.mp4",
+      "title": "04 Cinematch Tutorial 1"
+    }
+  ],
+  "paw-rescue": [
+    {
+      "id": "paw-rescue-01-cover",
+      "projectSlug": "paw-rescue",
+      "type": "image",
+      "src": "/media/paw-rescue/01-cover.png",
+      "filename": "01-cover.png",
+      "title": "01 Cover"
+    },
+    {
+      "id": "paw-rescue-02-homepage",
+      "projectSlug": "paw-rescue",
+      "type": "image",
+      "src": "/media/paw-rescue/02-homepage.png",
+      "filename": "02-homepage.png",
+      "title": "02 Homepage"
+    },
+    {
+      "id": "paw-rescue-10-dashboard",
+      "projectSlug": "paw-rescue",
+      "type": "image",
+      "src": "/media/paw-rescue/10-dashboard.png",
+      "filename": "10-dashboard.png",
+      "title": "10 Dashboard"
+    },
+    {
+      "id": "paw-rescue-11-mobile",
+      "projectSlug": "paw-rescue",
+      "type": "image",
+      "src": "/media/paw-rescue/11-mobile.png",
+      "filename": "11-mobile.png",
+      "title": "11 Mobile"
+    },
+    {
+      "id": "paw-rescue-demo",
+      "projectSlug": "paw-rescue",
+      "type": "video",
+      "src": "/media/paw-rescue/demo.mp4",
+      "filename": "demo.mp4",
+      "title": "Demo",
+      "poster": "/media/paw-rescue/demo.poster.png"
+    }
+  ]
+}

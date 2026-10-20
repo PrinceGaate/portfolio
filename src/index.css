@@ -1,0 +1,441 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #050505;
+    color: #33ff33;
+    margin: 0;
+    overflow-x: hidden;
+    height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+@layer components {
+  /* =========================================
+     Shared CRT Infrastructure
+     ========================================= */
+  .crt-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #050505;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .cursor-terminal {
+    cursor: crosshair;
+  }
+
+  .cursor-blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* =========================================
+     Green Phosphor OS Theme
+     ========================================= */
+  .os-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.2) 50%,
+      rgba(0, 0, 0, 0.2)
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .os-crt-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 51;
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9);
+  }
+  
+  .phosphor-glow {
+    text-shadow: 0 0 5px rgba(51, 255, 51, 0.7), 0 0 10px rgba(51, 255, 51, 0.5);
+  }
+
+  .terminal-panel {
+    background-color: rgba(10, 15, 10, 0.9);
+    border: 1px solid rgba(51, 255, 51, 0.3);
+    box-shadow: 0 0 15px rgba(51, 255, 51, 0.1);
+  }
+
+  .terminal-panel-active {
+    border: 1px solid #33ff33;
+    box-shadow: 0 0 20px rgba(51, 255, 51, 0.2);
+  }
+
+  /* =========================================
+     Analog Cyan Theme (Hero/Boot)
+     ========================================= */
+  .analog-theme {
+    background-color: #050605;
+    color: #e2ede6;
+    text-shadow: 0.5px 0 1px rgba(255,0,0,0.3), -0.5px 0 1px rgba(0,255,255,0.3);
+  }
+
+  .analog-crt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
+    background-size: 100% 3px, 3px 100%;
+    opacity: 0.85;
+  }
+
+  .screen-curve {
+    position: relative;
+    transform: scale(0.98) perspective(1200px) rotateX(0.5deg);
+    transform-origin: center;
+    border-radius: 20px;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
+  }
+  
+  .vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.95) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .analog-phosphor-glow {
+    text-shadow: 0 0 2px rgba(226, 237, 230, 0.6), 0 0 8px rgba(226, 237, 230, 0.3), 1px 0 1px rgba(255,0,0,0.4), -1px 0 1px rgba(0,255,255,0.4);
+  }
+  
+  .box-glow {
+    box-shadow: 0 0 12px rgba(226, 237, 230, 0.1), inset 0 0 8px rgba(226, 237, 230, 0.05);
+  }
+
+  .cyan-terminal-panel {
+    border: 1px solid rgba(226, 237, 230, 0.15);
+    background-color: transparent;
+  }
+  
+  .cyan-terminal-panel-active {
+    border: 1px solid rgba(226, 237, 230, 0.3);
+    background-color: rgba(10, 12, 10, 0.4);
+    backdrop-filter: blur(2px);
+  }
+  
+  .window-header {
+    background-color: rgba(226, 237, 230, 0.75);
+    color: #050605;
+  }
+  
+  .dithered-fill {
+    background-image: radial-gradient(rgba(226, 237, 230, 0.3) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+
+  .unstable-glow {
+    animation: unstable 3s infinite alternate;
+  }
+
+  @keyframes unstable {
+    0%, 100% { text-shadow: 0 0 3px rgba(226, 237, 230, 0.5), 0 0 8px rgba(226, 237, 230, 0.2), 1px 0 rgba(255,0,0,0.3), -1px 0 rgba(0,255,255,0.3); opacity: 0.95; }
+    45% { text-shadow: 0 0 2px rgba(226, 237, 230, 0.3), 0 0 4px rgba(226, 237, 230, 0.1), 1px 0 rgba(255,0,0,0.3), -1px 0 rgba(0,255,255,0.3); opacity: 0.85; }
+    50% { text-shadow: 0 0 6px rgba(226, 237, 230, 0.7), 0 0 12px rgba(226, 237, 230, 0.4), 2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5); opacity: 1; transform: translateX(0.5px); }
+    55% { text-shadow: 0 0 3px rgba(226, 237, 230, 0.5), 0 0 8px rgba(226, 237, 230, 0.2), 1px 0 rgba(255,0,0,0.3), -1px 0 rgba(0,255,255,0.3); opacity: 0.95; transform: translateX(0); }
+    80% { text-shadow: 0 0 3px rgba(226, 237, 230, 0.5), 0 0 8px rgba(226, 237, 230, 0.2), 1px 0 rgba(255,0,0,0.3), -1px 0 rgba(0,255,255,0.3); opacity: 0.9; }
+    85% { opacity: 0.7; transform: skewX(-0.5deg); }
+    90% { opacity: 0.95; transform: skewX(0); }
+  }
+
+  .scanline-shift {
+    animation: shift 8s infinite;
+  }
+
+  @keyframes shift {
+    0%, 94%, 100% { transform: translateX(0); }
+    95% { transform: translateX(2px); }
+    96% { transform: translateX(-1px); }
+    97% { transform: translateX(1px); }
+    98% { transform: translateX(-0.5px); }
+  }
+
+  .glitch-text {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .glitch-text::before, .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #050605;
+    overflow: hidden;
+    clip-path: inset(0 0 0 0);
+  }
+
+  .glitch-text::before {
+    left: 2px;
+    text-shadow: -1px 0 rgba(255, 0, 0, 0.7);
+    animation: glitch-anim-1 4s infinite linear alternate-reverse;
+    z-index: -1;
+  }
+
+  .glitch-text::after {
+    left: -2px;
+    text-shadow: 1px 0 rgba(0, 255, 255, 0.7);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    z-index: -2;
+  }
+
+  @keyframes glitch-anim-1 {
+    0% { clip-path: inset(20% 0 80% 0); transform: translate(0); }
+    10% { clip-path: inset(10% 0 30% 0); transform: translate(-1px, 1px); }
+    20% { clip-path: inset(80% 0 10% 0); transform: translate(1px, -1px); }
+    30% { clip-path: inset(40% 0 20% 0); transform: translate(0); }
+    40%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+  }
+
+  @keyframes glitch-anim-2 {
+    0% { clip-path: inset(10% 0 60% 0); transform: translate(0); }
+    15% { clip-path: inset(30% 0 20% 0); transform: translate(1px, -1px); }
+    25% { clip-path: inset(60% 0 10% 0); transform: translate(-1px, 1px); }
+    35% { clip-path: inset(20% 0 50% 0); transform: translate(0); }
+    45%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+  }
+
+  .typing-effect {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid #e2ede6;
+    animation: typing 3s steps(40, end), blink-caret .75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: #e2ede6; }
+  }
+
+  /* =========================================
+     Projects Section - Subtle CRT Neon Glow
+     ========================================= */
+  .project-badge-active {
+    border-color: rgba(56, 189, 248, 0.4);
+    background-color: rgba(8, 47, 73, 0.25);
+    color: #7dd3fc;
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.25), 0 0 12px rgba(56, 189, 248, 0.1);
+    transition: all 250ms ease-in-out;
+  }
+
+  .project-badge-active:hover {
+    border-color: rgba(56, 189, 248, 0.65);
+    color: #bae6fd;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 18px rgba(56, 189, 248, 0.2);
+  }
+
+  .project-badge-completed {
+    border-color: rgba(51, 255, 51, 0.35);
+    background-color: rgba(5, 46, 22, 0.25);
+    color: #86efac;
+    box-shadow: 0 0 6px rgba(51, 255, 51, 0.25), 0 0 12px rgba(51, 255, 51, 0.1);
+    transition: all 250ms ease-in-out;
+  }
+
+  .project-badge-completed:hover {
+    border-color: rgba(51, 255, 51, 0.65);
+    color: #bbf7d0;
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.45), 0 0 18px rgba(51, 255, 51, 0.2);
+  }
+
+  /* Primary Action: Deployment (Cyan / Blue Accent) */
+  .project-action-primary,
+  .project-action-btn {
+    border-color: rgba(56, 189, 248, 0.4);
+    background-color: rgba(8, 47, 73, 0.25);
+    color: #7dd3fc;
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.25), 0 0 12px rgba(56, 189, 248, 0.1);
+    transition: all 200ms ease-in-out;
+  }
+
+  .project-action-primary:hover,
+  .project-action-btn:hover {
+    border-color: rgba(56, 189, 248, 0.75);
+    background-color: rgba(8, 47, 73, 0.4);
+    color: #f0f9ff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 18px rgba(56, 189, 248, 0.2);
+  }
+
+  /* Secondary Action: GitHub (Muted Terminal Neutral Accent) */
+  .project-action-secondary {
+    border-color: rgba(156, 163, 175, 0.35);
+    background-color: rgba(255, 255, 255, 0.03);
+    color: #9ca3af;
+    box-shadow: 0 0 5px rgba(156, 163, 175, 0.12), 0 0 8px rgba(156, 163, 175, 0.05);
+    transition: all 200ms ease-in-out;
+  }
+
+  .project-action-secondary:hover {
+    border-color: rgba(209, 213, 219, 0.65);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #f3f4f6;
+    box-shadow: 0 0 8px rgba(209, 213, 219, 0.25), 0 0 14px rgba(209, 213, 219, 0.1);
+  }
+
+  /* =========================================
+     Certifications Section - Hover Sliding Panel & Card Styling
+     ========================================= */
+  .cert-card {
+    border-color: rgba(51, 255, 51, 0.2);
+    background-color: #121212;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: border-color 200ms ease-in-out, box-shadow 200ms ease-in-out;
+  }
+
+  .cert-card:hover {
+    border-color: rgba(51, 255, 51, 0.4);
+    box-shadow: 0 0 14px rgba(51, 255, 51, 0.08);
+  }
+
+  .cert-info-panel {
+    transform: translateY(calc(100% - 110px));
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cert-card:hover .cert-info-panel,
+  .cert-info-panel.is-expanded {
+    transform: translateY(0);
+  }
+
+  /* =========================================
+     Skills Section - Uniform Skill Cards & Icon Alignment
+     ========================================= */
+
+  /* Grid container for skill cards within each category */
+  .skill-category-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+  }
+
+  .skill-card {
+    height: 68px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 4px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 2px;
+    user-select: none;
+    transition: border-color 150ms ease-in-out, background-color 150ms ease-in-out;
+  }
+
+  .skill-card:hover {
+    border-color: rgba(51, 255, 51, 0.4);
+    background-color: rgba(51, 255, 51, 0.05);
+  }
+
+  .skill-card-icon-area {
+    height: 24px;
+    width: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    max-width: 24px;
+    max-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .skill-card-label-area {
+    height: 16px;
+    min-height: 16px;
+    max-height: 16px;
+    width: 100%;
+    min-width: 0;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .skill-card-label {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0 2px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+
+  /* Responsive grid for smaller screens */
+  @media (max-width: 639px) {
+    .skill-category-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-badge-active,
+    .project-badge-completed,
+    .project-action-btn,
+    .project-action-primary,
+    .project-action-secondary,
+    .cert-card,
+    .cert-info-panel,
+    .skill-card {
+      transition: none;
+    }
+  }
+}
