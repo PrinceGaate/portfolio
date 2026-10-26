@@ -59,6 +59,8 @@
     background-size: 100% 4px;
     pointer-events: none;
     z-index: 50;
+    transform: translateZ(0);
+    contain: strict;
   }
 
   .os-crt-overlay {
@@ -71,6 +73,8 @@
     pointer-events: none;
     z-index: 51;
     box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9);
+    transform: translateZ(0);
+    contain: strict;
   }
   
   .phosphor-glow {

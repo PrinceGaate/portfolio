@@ -109,8 +109,7 @@ export const MascotFace: React.FC<MascotFaceProps> = ({ expression, eyeRef }) =>
           {/* Inner face features that move slightly */}
           <div 
             ref={eyeRef}
-            className="flex flex-col items-center justify-center absolute w-full h-full"
-            style={{ transitionDuration: expression === 'DEFAULT' ? '200ms' : '50ms' }}
+            className="flex flex-col items-center justify-center absolute w-full h-full pointer-events-none will-change-transform"
           >
             {renderEyes()}
             {renderMouth()}

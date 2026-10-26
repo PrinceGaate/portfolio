@@ -1,10 +1,13 @@
 import React, { useEffect, useCallback } from 'react';
+import { useOverlay } from '../../hooks/useOverlay';
 
 interface MascotGuideProps {
   onClose: () => void;
 }
 
 export const MascotGuide: React.FC<MascotGuideProps> = ({ onClose }) => {
+  useOverlay(true, onClose, 'mascot-guide');
+
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

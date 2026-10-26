@@ -1,5 +1,4 @@
 import React from 'react';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import type { AppState } from '../../types/navigation';
 
 export const HomeScreen: React.FC<{ onNavigate: (screen: AppState) => void }> = ({ onNavigate }) => {
@@ -28,7 +27,7 @@ export const HomeScreen: React.FC<{ onNavigate: (screen: AppState) => void }> = 
           <button 
             key={folder.id}
             onClick={() => onNavigate(folder.id as AppState)}
-            className="flex flex-col items-center justify-center p-4 gap-4 terminal-panel hover:bg-primary/10 transition-colors group focus:outline-none focus:ring-1 focus:ring-primary h-32"
+            className="flex flex-col items-center justify-center p-4 gap-4 terminal-panel hover:bg-primary/10 transition-colors group focus:outline-none focus:ring-1 focus:ring-primary h-32 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[64px] group-hover:phosphor-glow" style={{ fontVariationSettings: "'FILL' 1" }}>
               {folder.icon}
@@ -39,9 +38,6 @@ export const HomeScreen: React.FC<{ onNavigate: (screen: AppState) => void }> = 
           </button>
         ))}
       </div>
-      
-      {/* Footer Command Prompt */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

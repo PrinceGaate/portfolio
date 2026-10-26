@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useTerminal } from '../../hooks/useTerminal';
+import { useTerminal, isNavigationCommand } from '../../hooks/useTerminal';
+import { isMobileDevice } from '../../utils/device';
 import type { AppState } from '../../types/navigation';
 
 interface CommandPromptProps {
@@ -14,14 +15,21 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({ onNavigate }) => {
   const latestRecord = history.length > 0 ? history[history.length - 1] : null;
 
   useEffect(() => {
-    // Focus without scrolling the page to prevent unwanted scroll inheritance on shared layouts
-    inputRef.current?.focus({ preventScroll: true });
+    // Only auto-focus on desktop devices to avoid opening the virtual keyboard automatically on mobile
+    if (!isMobileDevice()) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      if (input.trim()) {
-        executeCommand(input);
+      const trimmed = input.trim();
+      if (trimmed) {
+        executeCommand(trimmed);
+        // Dismiss focus and hide mobile keyboard after navigation command
+        if (isMobileDevice() || isNavigationCommand(trimmed)) {
+          inputRef.current?.blur();
+        }
       }
       setInput('');
     }

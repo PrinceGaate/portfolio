@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
+import { useOverlay } from '../../hooks/useOverlay';
 import type { CertificateItem } from '../../data/certificationsData';
 
 interface CertificateModalProps {
@@ -8,6 +9,8 @@ interface CertificateModalProps {
 }
 
 export const CertificateModal: React.FC<CertificateModalProps> = ({ certificate, onClose, triggerElement }) => {
+  useOverlay(true, onClose, `certificate-modal-${certificate.id}`);
+
   const images = Array.isArray(certificate.images) ? certificate.images : [];
   const hasImages = images.length > 0;
   const hasMultiple = images.length > 1;

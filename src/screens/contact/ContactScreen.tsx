@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import type { AppState } from '../../types/navigation';
 import { Panel } from '../../components/ui/Panel';
 import githubLogo from '../../assets/images/skills/github.png';
@@ -35,7 +34,7 @@ interface ContactScreenProps {
   onNavigate: (screen: AppState) => void;
 }
 
-export const ContactScreen: React.FC<ContactScreenProps> = ({ onNavigate }) => {
+export const ContactScreen: React.FC<ContactScreenProps> = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef<boolean>(true);
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -313,9 +312,6 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ onNavigate }) => {
         </div>
 
       </div>
-
-      {/* ── Pinned terminal prompt ── */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

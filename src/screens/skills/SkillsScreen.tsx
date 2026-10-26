@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import type { AppState } from '../../types/navigation';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import { SkillCategoryCard } from '../../components/skills';
 import { Panel } from '../../components/ui/Panel';
 import { categoriesData } from './skillsData';
@@ -9,7 +8,7 @@ interface SkillsScreenProps {
   onNavigate: (screen: AppState) => void;
 }
 
-export const SkillsScreen: React.FC<SkillsScreenProps> = ({ onNavigate }) => {
+export const SkillsScreen: React.FC<SkillsScreenProps> = () => {
   const totalSkills = categoriesData.reduce((acc, cat) => acc + cat.items.length, 0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -76,9 +75,6 @@ export const SkillsScreen: React.FC<SkillsScreenProps> = ({ onNavigate }) => {
           <span>&gt;</span>
         </div>
       </div>
-      
-      {/* Footer Command Prompt */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

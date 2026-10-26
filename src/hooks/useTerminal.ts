@@ -6,6 +6,25 @@ export interface CommandRecord {
   output: string | React.ReactNode;
 }
 
+export const NAVIGATION_COMMANDS: readonly string[] = [
+  'home',
+  'projects',
+  'skills',
+  'about',
+  'certifications',
+  'certs',
+  'experience',
+  'resume',
+  'methods',
+  'contact',
+  'exit'
+];
+
+export function isNavigationCommand(cmd: string): boolean {
+  const trimmed = cmd.trim().toLowerCase();
+  return NAVIGATION_COMMANDS.includes(trimmed);
+}
+
 export const useTerminal = (onNavigate: (screen: AppState) => void) => {
   const [history, setHistory] = useState<CommandRecord[]>([]);
 

@@ -9,9 +9,8 @@ import { ProjectsScreen } from './screens/projects';
 import { ResumeScreen } from './screens/resume';
 import { CertificationsScreen } from './screens/certifications';
 import { OSLayout } from './components/layout/OSLayout';
-import { CommandPrompt } from './components/terminal/CommandPrompt';
-
 import { MascotGuide } from './components/mascot/MascotGuide';
+import { overlayManager } from './utils/overlayManager';
 import type { AppState } from './types/navigation';
 
 const VALID_HASH_SCREENS: AppState[] = [
@@ -25,7 +24,6 @@ const VALID_HASH_SCREENS: AppState[] = [
   'methods',
   'terminal'
 ];
-
 
 function getInitialState(): AppState {
   if (typeof window === 'undefined') return 'hero';
@@ -41,8 +39,10 @@ function App() {
   const [manualOpen, setManualOpen] = useState(false);
 
   const navStackRef = useRef<AppState[]>([]);
+  const appStateRef = useRef<AppState>(appState);
+  appStateRef.current = appState;
 
-  // Initialize in-app navigation stack and sync hash without polluting browser history
+  // Initialize browser history and attach popstate handler
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -51,32 +51,48 @@ function App() {
     if (VALID_HASH_SCREENS.includes(currentHash)) {
       if (currentHash !== 'home') {
         navStackRef.current = ['home', currentHash];
+        // Populate history stack so Android Back from direct URL returns to 'home'
+        window.history.replaceState({ screen: 'home' }, '', '#home');
+        window.history.pushState({ screen: currentHash }, '', `#${currentHash}`);
       } else {
         navStackRef.current = ['home'];
+        window.history.replaceState({ screen: 'home' }, '', '#home');
       }
-      window.history.replaceState(null, '', `#${currentHash}`);
     } else {
       navStackRef.current = ['hero'];
+      window.history.replaceState({ screen: 'hero' }, '', window.location.pathname + window.location.search);
     }
 
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase() as AppState;
-      if (VALID_HASH_SCREENS.includes(hash)) {
-        setAppState((prev) => {
-          if (prev !== hash) {
-            const stack = navStackRef.current;
-            if (stack.length === 0 || stack[stack.length - 1] !== hash) {
-              stack.push(hash);
-            }
-            return hash;
-          }
-          return prev;
-        });
+    const handlePopState = (event: PopStateEvent) => {
+      // 1. If this popstate was triggered by a programmatic overlay close or should dismiss an overlay:
+      if (overlayManager.handlePopState()) {
+        return;
       }
+
+      // 2. Otherwise, perform internal screen navigation:
+      const stateScreen = event.state?.screen as AppState | undefined;
+      const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase() as AppState;
+
+      let targetScreen: AppState = 'home';
+      if (stateScreen && VALID_HASH_SCREENS.includes(stateScreen)) {
+        targetScreen = stateScreen;
+      } else if (VALID_HASH_SCREENS.includes(hash)) {
+        targetScreen = hash;
+      } else if (!hash || hash === 'hero' || stateScreen === 'hero') {
+        targetScreen = 'hero';
+      }
+
+      // Update in-app stack
+      const stack = navStackRef.current;
+      if (stack.length > 1 && stack[stack.length - 1] === appStateRef.current) {
+        stack.pop();
+      }
+
+      setAppState(targetScreen);
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Forward navigation initiated from UI or command prompt
@@ -88,17 +104,23 @@ function App() {
       return;
     }
 
+    // Dismiss any open overlays when navigating to a new screen
+    overlayManager.dismissAll();
+
     // Update in-app stack
     const stack = navStackRef.current;
     if (stack.length === 0 || stack[stack.length - 1] !== screen) {
       stack.push(screen);
     }
 
-    // Update hash with replaceState so current screen is reflected without creating browser back history
-    if (screen === 'hero') {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    // Update browser history: pushState creates history entry for Android/browser Back
+    if (appState === 'hero' || appState === 'boot') {
+      // Transitioning into the OS from boot/hero replaces state to prevent navigating back to boot sequence
+      window.history.replaceState({ screen }, '', `#${screen}`);
+    } else if (screen === 'hero') {
+      window.history.pushState({ screen: 'hero' }, '', window.location.pathname + window.location.search);
     } else {
-      window.history.replaceState(null, '', `#${screen}`);
+      window.history.pushState({ screen }, '', `#${screen}`);
     }
 
     setAppState(screen);
@@ -112,29 +134,13 @@ function App() {
     // If already at root home, stay on home (never exit the OS via Escape)
     if (appState === 'home') return;
 
-    const stack = navStackRef.current;
-    let targetScreen: AppState = 'home';
-
-    if (stack.length > 1) {
-      // Pop current screen
-      stack.pop();
-      // Target is the previous screen in the stack
-      targetScreen = stack[stack.length - 1] || 'home';
+    // Go back in browser history if possible so history and screen remain in sync
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
     } else {
-      targetScreen = 'home';
-      navStackRef.current = ['home'];
+      handleNavigate('home');
     }
-
-    // Never navigate back to hero or boot via Escape
-    if (targetScreen === 'hero' || targetScreen === 'boot') {
-      targetScreen = 'home';
-      navStackRef.current = ['home'];
-    }
-
-    // Update state directly and sync hash via replaceState (no window.history.back)
-    setAppState(targetScreen);
-    window.history.replaceState(null, '', `#${targetScreen}`);
-  }, [appState]);
+  }, [appState, handleNavigate]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -152,8 +158,8 @@ function App() {
           return;
         }
 
-        // If a modal, dialog, or overlay is open, do not navigate away from parent screen
-        if (typeof document !== 'undefined' && document.querySelector('[role="dialog"]')) {
+        // If a modal, dialog, or overlay is open, dismiss the overlay first without navigating away
+        if (overlayManager.hasOpenOverlays() || (typeof document !== 'undefined' && document.querySelector('[role="dialog"]'))) {
           return;
         }
 
@@ -225,7 +231,6 @@ function App() {
                 &gt; This module is currently under construction.
               </p>
             </div>
-            <CommandPrompt onNavigate={handleNavigate} />
           </div>
         );
     }

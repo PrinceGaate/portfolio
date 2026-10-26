@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import { Panel } from '../../components/ui/Panel';
 import { CertificateCard, CertificateModal } from '../../components/certifications';
 import { certificationsData, type CertificateItem } from '../../data/certificationsData';
@@ -9,7 +8,7 @@ interface CertificationsScreenProps {
   onNavigate: (screen: AppState) => void;
 }
 
-export const CertificationsScreen: React.FC<CertificationsScreenProps> = ({ onNavigate }) => {
+export const CertificationsScreen: React.FC<CertificationsScreenProps> = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedCert, setSelectedCert] = useState<CertificateItem | null>(null);
   const [triggerElement, setTriggerElement] = useState<HTMLElement | null>(null);
@@ -105,9 +104,6 @@ export const CertificationsScreen: React.FC<CertificationsScreenProps> = ({ onNa
           </div>
         )}
       </div>
-
-      {/* Footer Command Prompt */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

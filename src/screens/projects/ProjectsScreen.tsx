@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import { Panel } from '../../components/ui/Panel';
 import { ProjectCard, ProjectDetailModal } from '../../components/projects';
 import { projectsData } from '../../data/projectsData';
@@ -10,7 +9,7 @@ interface ProjectsScreenProps {
   onNavigate: (screen: AppState) => void;
 }
 
-export const ProjectsScreen: React.FC<ProjectsScreenProps> = ({ onNavigate }) => {
+export const ProjectsScreen: React.FC<ProjectsScreenProps> = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
 
@@ -91,9 +90,6 @@ export const ProjectsScreen: React.FC<ProjectsScreenProps> = ({ onNavigate }) =>
           ))}
         </div>
       </div>
-
-      {/* Footer Command Prompt */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MascotFace } from './MascotFace';
 import type { MascotExpression } from './MascotFace';
 import { MascotGuide } from './MascotGuide';
+import { isMobileDevice } from '../../utils/device';
 
 interface SystemMascotProps {
   onOpenManual?: () => void;
@@ -20,27 +21,39 @@ export const SystemMascot: React.FC<SystemMascotProps> = ({ onOpenManual }) => {
   const expressionTimerRef = useRef<number | null>(null);
   const isIdleRef = useRef(false);
   
+  // Cached dimensions to prevent synchronous layout recalculations
+  const zoneBoundsRef = useRef<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    centerX: number;
+    centerY: number;
+  }>({ left: 0, top: 0, width: 0, height: 0, centerX: 0, centerY: 0 });
+
   const currentBodyOffset = useRef({ x: 0, y: 0 });
   const currentEyeOffset = useRef({ x: 0, y: 0 });
+  const targetBodyRef = useRef({ x: 0, y: 0 });
+  const targetEyeRef = useRef({ x: 0, y: 0 });
   const lastTimeRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+  const isLoopRunningRef = useRef(false);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let animationFrame: number;
+    const isMobile = isMobileDevice();
 
-    const resetIdle = () => {
-      isIdleRef.current = false;
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = window.setTimeout(() => {
-        isIdleRef.current = true;
-        setExpression('SLEEPY');
-      }, 7000);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
-      resetIdle();
-      setExpression(prev => (prev === 'SLEEPY' ? 'DEFAULT' : prev));
+    const updateZoneBounds = () => {
+      if (!zoneRef.current) return;
+      const rect = zoneRef.current.getBoundingClientRect();
+      zoneBoundsRef.current = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+      };
     };
 
     const scheduleRandomExpression = () => {
@@ -65,96 +78,141 @@ export const SystemMascot: React.FC<SystemMascotProps> = ({ onOpenManual }) => {
       }, waitTime);
     };
 
-    if (!prefersReduced) {
-      window.addEventListener('mousemove', handleMouseMove);
-      resetIdle();
+    // On touch/mobile devices or when prefers-reduced-motion is true:
+    // Do NOT run mouse tracking or continuous RAF loop.
+    if (prefersReduced || isMobile) {
       scheduleRandomExpression();
-
-      const updateMascot = (time: number) => {
-        if (!zoneRef.current || !mascotRef.current || !eyeRef.current) {
-          animationFrame = requestAnimationFrame(updateMascot);
-          return;
-        }
-
-        const zoneRect = zoneRef.current.getBoundingClientRect();
-        const mascotRect = mascotRef.current.getBoundingClientRect();
-        
-        // Neutral position is center of the zone
-        const zoneCenterX = zoneRect.left + zoneRect.width / 2;
-        const zoneCenterY = zoneRect.top + zoneRect.height / 2;
-        
-        let targetBodyX = 0;
-        let targetBodyY = 0;
-        let targetEyeX = 0;
-        let targetEyeY = 0;
-
-        if (!isIdleRef.current) {
-          const isMouseInSidebar = 
-            mousePosRef.current.x >= zoneRect.left - 20 && 
-            mousePosRef.current.x <= zoneRect.right + 20;
-
-          if (isMouseInSidebar) {
-            // Mouse is in or very near sidebar, move body towards mouse
-            const dx = mousePosRef.current.x - zoneCenterX;
-            const dy = mousePosRef.current.y - zoneCenterY;
-            
-            // Constrain movement so it NEVER leaves the zone.
-            // Leave some padding so it doesn't touch the borders.
-            const maxTravelX = Math.max(0, (zoneRect.width - mascotRect.width) / 2 - 16);
-            const maxTravelY = Math.max(0, (zoneRect.height - mascotRect.height) / 2 - 40); // extra padding for manual button
-            
-            targetBodyX = Math.max(-maxTravelX, Math.min(maxTravelX, dx * 0.5));
-            targetBodyY = Math.max(-maxTravelY, Math.min(maxTravelY, dy * 0.5));
-          } else {
-            // Mouse outside sidebar: gently return body to center
-            targetBodyX = 0;
-            targetBodyY = 0;
-          }
-
-          // Eyes track mouse regardless, but subtly
-          const currentMascotCenterX = zoneCenterX + currentBodyOffset.current.x;
-          const currentMascotCenterY = zoneCenterY + currentBodyOffset.current.y;
-          
-          const edx = mousePosRef.current.x - currentMascotCenterX;
-          const edy = mousePosRef.current.y - currentMascotCenterY;
-          const dist = Math.sqrt(edx * edx + edy * edy);
-          
-          if (dist > 0) {
-            const maxEyeOffset = 3;
-            targetEyeX = (edx / dist) * Math.min(dist / 40, maxEyeOffset);
-            targetEyeY = (edy / dist) * Math.min(dist / 40, maxEyeOffset);
-          }
-        }
-
-        const dt = Math.min(time - lastTimeRef.current, 50);
-        lastTimeRef.current = time;
-        
-        const lerpFactorBody = 1 - Math.exp(-dt * 0.005);
-        const lerpFactorEye = 1 - Math.exp(-dt * 0.01);
-        
-        currentBodyOffset.current.x += (targetBodyX - currentBodyOffset.current.x) * lerpFactorBody;
-        currentBodyOffset.current.y += (targetBodyY - currentBodyOffset.current.y) * lerpFactorBody;
-        
-        currentEyeOffset.current.x += (targetEyeX - currentEyeOffset.current.x) * lerpFactorEye;
-        currentEyeOffset.current.y += (targetEyeY - currentEyeOffset.current.y) * lerpFactorEye;
-        
-        // Direct DOM manipulation
-        mascotRef.current.style.transform = `translate(${currentBodyOffset.current.x}px, ${currentBodyOffset.current.y}px)`;
-        eyeRef.current.style.transform = `translate(${currentEyeOffset.current.x}px, ${currentEyeOffset.current.y}px)`;
-
-        animationFrame = requestAnimationFrame(updateMascot);
+      return () => {
+        if (expressionTimerRef.current) clearTimeout(expressionTimerRef.current);
       };
-      
-      animationFrame = requestAnimationFrame(updateMascot);
-    } else {
-      scheduleRandomExpression();
     }
+
+    // Initialize cached bounds
+    updateZoneBounds();
+    window.addEventListener('resize', updateZoneBounds, { passive: true });
+
+    const stepAnimation = (time: number) => {
+      if (!mascotRef.current || !eyeRef.current) {
+        isLoopRunningRef.current = false;
+        return;
+      }
+
+      const dt = Math.min(time - (lastTimeRef.current || time), 50);
+      lastTimeRef.current = time;
+
+      const lerpFactorBody = 1 - Math.exp(-dt * 0.005);
+      const lerpFactorEye = 1 - Math.exp(-dt * 0.01);
+
+      const targetBody = targetBodyRef.current;
+      const targetEye = targetEyeRef.current;
+
+      currentBodyOffset.current.x += (targetBody.x - currentBodyOffset.current.x) * lerpFactorBody;
+      currentBodyOffset.current.y += (targetBody.y - currentBodyOffset.current.y) * lerpFactorBody;
+
+      currentEyeOffset.current.x += (targetEye.x - currentEyeOffset.current.x) * lerpFactorEye;
+      currentEyeOffset.current.y += (targetEye.y - currentEyeOffset.current.y) * lerpFactorEye;
+
+      mascotRef.current.style.transform = `translate3d(${currentBodyOffset.current.x.toFixed(2)}px, ${currentBodyOffset.current.y.toFixed(2)}px, 0)`;
+      eyeRef.current.style.transform = `translate3d(${currentEyeOffset.current.x.toFixed(2)}px, ${currentEyeOffset.current.y.toFixed(2)}px, 0)`;
+
+      // Check if settled to stop running RAF loop
+      const bodyDiff = Math.abs(targetBody.x - currentBodyOffset.current.x) + Math.abs(targetBody.y - currentBodyOffset.current.y);
+      const eyeDiff = Math.abs(targetEye.x - currentEyeOffset.current.x) + Math.abs(targetEye.y - currentEyeOffset.current.y);
+
+      if (bodyDiff < 0.05 && eyeDiff < 0.05) {
+        // Snapped to resting position, pause RAF loop
+        isLoopRunningRef.current = false;
+        animationFrameRef.current = null;
+        return;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(stepAnimation);
+    };
+
+    const wakeAnimationLoop = () => {
+      if (!isLoopRunningRef.current) {
+        isLoopRunningRef.current = true;
+        lastTimeRef.current = performance.now();
+        animationFrameRef.current = requestAnimationFrame(stepAnimation);
+      }
+    };
+
+    const resetIdle = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = window.setTimeout(() => {
+        isIdleRef.current = true;
+        setExpression('SLEEPY');
+        targetBodyRef.current = { x: 0, y: 0 };
+        targetEyeRef.current = { x: 0, y: 0 };
+        wakeAnimationLoop();
+      }, 7000);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePosRef.current.x = e.clientX;
+      mousePosRef.current.y = e.clientY;
+
+      if (isIdleRef.current) {
+        isIdleRef.current = false;
+        setExpression('DEFAULT');
+      }
+      resetIdle();
+
+      const bounds = zoneBoundsRef.current;
+      if (bounds.width === 0) {
+        updateZoneBounds();
+      }
+
+      if (!isIdleRef.current && bounds.width > 0) {
+        const isMouseInSidebar = 
+          e.clientX >= bounds.left - 20 && 
+          e.clientX <= bounds.left + bounds.width + 20;
+
+        if (isMouseInSidebar) {
+          const dx = e.clientX - bounds.centerX;
+          const dy = e.clientY - bounds.centerY;
+
+          const maxTravelX = Math.max(0, bounds.width / 2 - 40);
+          const maxTravelY = Math.max(0, bounds.height / 2 - 50);
+
+          targetBodyRef.current.x = Math.max(-maxTravelX, Math.min(maxTravelX, dx * 0.4));
+          targetBodyRef.current.y = Math.max(-maxTravelY, Math.min(maxTravelY, dy * 0.4));
+        } else {
+          targetBodyRef.current.x = 0;
+          targetBodyRef.current.y = 0;
+        }
+
+        // Eye tracking calculations using cached center
+        const mascotCenterX = bounds.centerX + currentBodyOffset.current.x;
+        const mascotCenterY = bounds.centerY + currentBodyOffset.current.y;
+        const edx = e.clientX - mascotCenterX;
+        const edy = e.clientY - mascotCenterY;
+        const dist = Math.hypot(edx, edy);
+
+        if (dist > 0) {
+          const maxEyeOffset = 3;
+          targetEyeRef.current.x = (edx / dist) * Math.min(dist / 40, maxEyeOffset);
+          targetEyeRef.current.y = (edy / dist) * Math.min(dist / 40, maxEyeOffset);
+        } else {
+          targetEyeRef.current.x = 0;
+          targetEyeRef.current.y = 0;
+        }
+
+        wakeAnimationLoop();
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    resetIdle();
+    scheduleRandomExpression();
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', updateZoneBounds);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       if (expressionTimerRef.current) clearTimeout(expressionTimerRef.current);
-      cancelAnimationFrame(animationFrame);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      isLoopRunningRef.current = false;
     };
   }, []);
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import { Panel } from '../ui/Panel';
 import { getProjectMedia, type ProjectMediaItem } from '../../generated/projectMedia';
+import { useOverlay } from '../../hooks/useOverlay';
 import type { ProjectData } from '../../types/project';
 
 export type { ProjectData };
@@ -57,6 +58,19 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
   const [activeMediaIndex, setActiveMediaIndex] = useState<number>(0);
   const [zoomedMediaIndex, setZoomedMediaIndex] = useState<number | null>(null);
   const [imageScale, setImageScale] = useState<number>(1);
+
+  // Register main project modal overlay
+  useOverlay(true, onClose, `project-modal-${project.id}`);
+
+  // Register nested image zoom overlay so Android Back closes zoom first
+  useOverlay(
+    zoomedMediaIndex !== null,
+    () => {
+      setZoomedMediaIndex(null);
+      setImageScale(1);
+    },
+    `project-zoom-${project.id}`
+  );
 
   // Automatically load media items from the project's folder manifest
   const mediaItems: ProjectMediaItem[] = useMemo(() => {
@@ -364,10 +378,10 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                 </Panel>
               </div>
 
-              {/* Right Column: Image & Video Collage (Visual Assets) */}
-              <div className="lg:col-span-5 relative min-h-[420px] lg:min-h-0 h-full flex-1 rounded border border-gray-800 bg-black/40 flex items-center justify-center overflow-hidden">
+              {/* Right Column: Image & Video Collage / Mobile Gallery (Visual Assets) */}
+              <div className="lg:col-span-5 relative flex flex-col rounded border border-gray-800 bg-black/40 p-2 sm:p-3 lg:p-0 lg:flex-1 lg:h-full lg:items-center lg:justify-center overflow-hidden">
                 {/* Visual Assets Header */}
-                <div className="absolute top-0 left-0 p-2.5 w-full flex justify-between items-center z-40 pointer-events-none">
+                <div className="p-2.5 w-full flex justify-between items-center z-40 lg:absolute lg:top-0 lg:left-0 pointer-events-none">
                   <span className="text-primary/50 text-[9px] tracking-widest font-mono">
                     VISUAL_ASSETS.SYS
                   </span>
@@ -381,7 +395,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                 {/* ═══ Zoomed Preview Modal (Images & Native Video Player) ═══ */}
                 {zoomedMediaIndex !== null && currentZoomedItem && (
                   <div
-                    className="fixed inset-0 z-[100002] flex flex-col items-center justify-between p-2 sm:p-4 lg:p-6 select-none"
+                    className="fixed inset-0 z-[100002] flex flex-col items-center justify-between p-2 sm:p-4 lg:p-6 select-none bg-black/95"
                     onClick={(e) => {
                       e.stopPropagation();
                       setZoomedMediaIndex(null);
@@ -389,19 +403,21 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                     }}
                   >
                     {/* Top Controls & Info Bar */}
-                    <div className="w-full max-w-[1300px] shrink-0 flex justify-between items-center gap-2 px-2 py-1 z-10">
-                      <div className="pointer-events-auto bg-black/90 px-3 py-1.5 border border-primary/40 text-primary/80 text-[10px] tracking-widest uppercase font-mono flex items-center gap-2">
-                        <span>
-                          PREVIEW.SYS / {zoomedMediaIndex + 1} OF {mediaItems.length}
+                    <div className="w-full max-w-[1300px] shrink-0 flex justify-between items-center gap-2 px-1 sm:px-2 py-1 z-10">
+                      <div className="pointer-events-auto bg-black/90 px-2 sm:px-3 py-1 sm:py-1.5 border border-primary/40 text-primary/80 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono flex items-center gap-1.5 sm:gap-2 truncate max-w-[65%] sm:max-w-none">
+                        <span className="shrink-0">
+                          {zoomedMediaIndex + 1}/{mediaItems.length}
                         </span>
-                        <span className="text-primary/40">|</span>
-                        <span className="text-gray-300 font-bold">{currentZoomedItem.filename}</span>
-                        <span className="text-[9px] px-1 border border-primary/30 text-primary/70">
+                        <span className="text-primary/40 shrink-0">|</span>
+                        <span className="text-gray-300 font-bold truncate max-w-[110px] sm:max-w-[240px]">
+                          {currentZoomedItem.filename}
+                        </span>
+                        <span className="text-[8px] sm:text-[9px] px-1 border border-primary/30 text-primary/70 shrink-0 hidden xs:inline">
                           {currentZoomedItem.type.toUpperCase()}
                         </span>
                       </div>
 
-                      <div className="flex gap-2 pointer-events-auto items-center text-primary/80 text-[10px] tracking-widest font-bold bg-black/95 px-2 py-1.5 border border-primary/40 shadow-[0_0_15px_rgba(0,0,0,0.8)] font-mono">
+                      <div className="flex gap-1.5 sm:gap-2 pointer-events-auto items-center text-primary/80 text-[10px] tracking-widest font-bold bg-black/95 px-2 py-1 sm:py-1.5 border border-primary/40 shadow-[0_0_15px_rgba(0,0,0,0.8)] font-mono">
                         {currentZoomedItem.type === 'image' && (
                           <>
                             <button
@@ -409,7 +425,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                                 e.stopPropagation();
                                 decreaseScale();
                               }}
-                              className="px-2.5 py-0.5 hover:text-white transition-colors disabled:opacity-30 focus:outline-none focus:text-white"
+                              className="px-2 sm:px-2.5 py-0.5 hover:text-white transition-colors disabled:opacity-30 focus:outline-none focus:text-white"
                               disabled={imageScale <= 0.5}
                               title="Zoom out"
                               aria-label="Zoom out"
@@ -421,7 +437,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                                 e.stopPropagation();
                                 resetScale();
                               }}
-                              className="px-2.5 py-0.5 hover:text-white transition-colors border-l border-r border-primary/40 focus:outline-none focus:text-white"
+                              className="px-2 sm:px-2.5 py-0.5 hover:text-white transition-colors border-l border-r border-primary/40 focus:outline-none focus:text-white"
                               title="Reset scale"
                               aria-label="Reset scale"
                             >
@@ -432,7 +448,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                                 e.stopPropagation();
                                 increaseScale();
                               }}
-                              className="px-2.5 py-0.5 hover:text-white transition-colors disabled:opacity-30 focus:outline-none focus:text-white"
+                              className="px-2 sm:px-2.5 py-0.5 hover:text-white transition-colors disabled:opacity-30 focus:outline-none focus:text-white"
                               disabled={imageScale >= 2.0}
                               title="Zoom in"
                               aria-label="Zoom in"
@@ -443,8 +459,8 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                         )}
 
                         {currentZoomedItem.type === 'video' && (
-                          <span className="text-[9px] text-primary/60 tracking-widest px-2 uppercase">
-                            NATIVE_VIDEO_PLAYBACK
+                          <span className="text-[9px] text-primary/60 tracking-widest px-1 sm:px-2 uppercase">
+                            VIDEO
                           </span>
                         )}
 
@@ -454,7 +470,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                             setZoomedMediaIndex(null);
                             setImageScale(1);
                           }}
-                          className="px-2.5 py-0.5 ml-1 border-l border-primary/40 hover:text-white transition-colors focus:outline-none focus:text-white"
+                          className="px-2 sm:px-2.5 py-0.5 ml-1 border-l border-primary/40 hover:text-white transition-colors focus:outline-none focus:text-white"
                           title="Close preview"
                           aria-label="Close preview"
                         >
@@ -474,11 +490,11 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                             e.stopPropagation();
                             handlePrevZoom();
                           }}
-                          className="absolute left-2 sm:left-4 z-20 p-2.5 sm:p-3.5 border border-primary/40 text-primary/80 hover:text-white hover:bg-primary/20 hover:border-primary transition-all rounded-full focus:outline-none focus:ring-1 focus:ring-primary bg-black/85 shadow-[0_0_20px_rgba(0,0,0,0.9)] cursor-pointer"
+                          className="absolute left-1 sm:left-4 z-20 p-2 sm:p-3.5 border border-primary/40 text-primary/80 hover:text-white hover:bg-primary/20 hover:border-primary transition-all rounded-full focus:outline-none focus:ring-1 focus:ring-primary bg-black/85 shadow-[0_0_20px_rgba(0,0,0,0.9)] cursor-pointer"
                           aria-label="Previous item (wraps to last)"
                           title="Previous item"
                         >
-                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
                         </button>
@@ -486,17 +502,17 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
 
                       {currentZoomedItem.type === 'image' ? (
                         <div
-                          className="relative max-w-full max-h-full h-[85vh] w-auto max-w-[1250px] flex items-center justify-center border border-primary/40 bg-[#080b08] shadow-[0_0_50px_rgba(51,255,51,0.1)] overflow-hidden transition-transform duration-300 ease-out"
+                          className="relative max-w-full max-h-[75vh] sm:max-h-[85vh] w-auto max-w-[1250px] flex items-center justify-center border border-primary/40 bg-[#080b08] shadow-[0_0_50px_rgba(51,255,51,0.1)] overflow-hidden transition-transform duration-300 ease-out"
                           style={{ transform: `scale(${imageScale})` }}
                         >
                           <img
                             src={currentZoomedItem.src}
                             alt={`${project.name} - ${currentZoomedItem.title}`}
-                            className="max-h-[85vh] max-w-full w-auto h-auto object-contain block select-none"
+                            className="max-h-[75vh] sm:max-h-[85vh] max-w-full w-auto h-auto object-contain block select-none"
                           />
                         </div>
                       ) : (
-                        <div className="relative max-w-full max-h-full h-[85vh] w-auto max-w-[1250px] flex items-center justify-center border border-primary/40 bg-[#080b08] shadow-[0_0_50px_rgba(51,255,51,0.15)] overflow-hidden">
+                        <div className="relative max-w-full max-h-[75vh] sm:max-h-[85vh] w-auto max-w-[1250px] flex items-center justify-center border border-primary/40 bg-[#080b08] shadow-[0_0_50px_rgba(51,255,51,0.15)] overflow-hidden">
                           <video
                             key={currentZoomedItem.src}
                             src={currentZoomedItem.src}
@@ -504,7 +520,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                             controls
                             playsInline
                             preload="metadata"
-                            className="max-h-[85vh] max-w-full w-auto h-auto object-contain block bg-black"
+                            className="max-h-[75vh] sm:max-h-[85vh] max-w-full w-auto h-auto object-contain block bg-black"
                           >
                             <p className="text-gray-400 p-4 text-xs">
                               Your browser does not support HTML5 video playback.
@@ -519,11 +535,11 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                             e.stopPropagation();
                             handleNextZoom();
                           }}
-                          className="absolute right-2 sm:right-4 z-20 p-2.5 sm:p-3.5 border border-primary/40 text-primary/80 hover:text-white hover:bg-primary/20 hover:border-primary transition-all rounded-full focus:outline-none focus:ring-1 focus:ring-primary bg-black/85 shadow-[0_0_20px_rgba(0,0,0,0.9)] cursor-pointer"
+                          className="absolute right-1 sm:right-4 z-20 p-2 sm:p-3.5 border border-primary/40 text-primary/80 hover:text-white hover:bg-primary/20 hover:border-primary transition-all rounded-full focus:outline-none focus:ring-1 focus:ring-primary bg-black/85 shadow-[0_0_20px_rgba(0,0,0,0.9)] cursor-pointer"
                           aria-label="Next item (wraps to first)"
                           title="Next item"
                         >
-                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
@@ -532,9 +548,9 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                   </div>
                 )}
 
-                {/* ═══ Default Collage View Or Empty State ═══ */}
+                {/* ═══ Gallery Views Or Empty State ═══ */}
                 {mediaItems.length === 0 ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-gray-500 gap-2.5">
+                  <div className="w-full h-full min-h-[180px] lg:min-h-[300px] flex flex-col items-center justify-center p-6 text-center text-gray-500 gap-2.5">
                     <span className="text-xs tracking-widest text-primary/70 font-bold uppercase font-mono">
                       NO MEDIA LINKED
                     </span>
@@ -543,86 +559,170 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project,
                     </p>
                   </div>
                 ) : (
-                  <div className="relative w-full max-w-[540px] aspect-square lg:aspect-auto h-full max-h-[92%] flex items-center justify-center p-4">
-                    {mediaItems.map((item, index) => {
-                      const pos = getCollagePosition(index, mediaItems.length);
-                      const isActive = activeMediaIndex === index;
-                      const baseZIndex = (index + 1) * 2;
+                  <>
+                    {/* A. Responsive Mobile Gallery (Horizontal Scroll with Snap, no overlapping) */}
+                    <div className="flex lg:hidden flex-col w-full gap-2 pt-1 pb-2">
+                      <div className="flex items-center justify-between text-[10px] text-primary/70 tracking-widest font-mono px-1">
+                        <span>GALLERY_PREVIEW [{mediaItems.length}]</span>
+                        <span className="text-[9px] text-gray-500 font-mono">[SWIPE • TAP TO ZOOM]</span>
+                      </div>
 
-                      const positionClass = `absolute focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer group ${
-                        isActive
-                          ? 'z-50 shadow-[0_15px_40px_rgba(0,0,0,0.9)]'
-                          : 'shadow-[0_5px_15px_rgba(0,0,0,0.6)] hover:z-40'
-                      }`;
-
-                      const style: React.CSSProperties = {
-                        transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                        zIndex: isActive ? 50 : baseZIndex,
-                        left: pos.left,
-                        top: pos.top,
-                        width: pos.width,
-                        height: pos.height,
-                        transform: `translate(${isActive ? '0, -4%' : '0, 0'}) rotate(${
-                          isActive ? '0deg' : pos.rotate
-                        }) scale(${isActive ? 1.04 : 1})`,
-                        border: `1px solid ${isActive ? 'rgba(51, 255, 51, 0.6)' : 'rgba(100, 100, 100, 0.35)'}`,
-                        backgroundColor: '#0a0a0a',
-                        filter: isActive ? 'brightness(1) grayscale(0)' : 'brightness(0.7) grayscale(0.5)',
-                      };
-
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMediaIndex(index);
-                            setZoomedMediaIndex(index);
-                            setImageScale(1);
-                          }}
-                          className={`overflow-hidden rounded-sm ${positionClass}`}
-                          style={style}
-                          aria-label={`View ${item.type}: ${item.title}`}
-                        >
-                          {item.type === 'video' ? (
-                            <div className="relative w-full h-full bg-black flex items-center justify-center">
-                              {item.poster ? (
-                                <img
-                                  src={item.poster}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover pointer-events-none"
-                                  loading="lazy"
-                                />
+                      <div className="flex gap-3 overflow-x-auto custom-scrollbar snap-x snap-mandatory py-1 px-1 -mx-1">
+                        {mediaItems.map((item, index) => {
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveMediaIndex(index);
+                                setZoomedMediaIndex(index);
+                                setImageScale(1);
+                              }}
+                              className="snap-center shrink-0 w-[80vw] max-w-[320px] aspect-[16/10] bg-[#0c0c0c] border border-primary/30 rounded-sm overflow-hidden relative flex items-center justify-center group focus:outline-none focus:ring-1 focus:ring-primary shadow-[0_0_15px_rgba(0,0,0,0.7)]"
+                              aria-label={`View ${item.type}: ${item.title}`}
+                            >
+                              {item.type === 'video' ? (
+                                <div className="relative w-full h-full bg-black flex items-center justify-center">
+                                  {item.poster ? (
+                                    <img
+                                      src={item.poster}
+                                      alt={item.title}
+                                      className="w-full h-full object-cover pointer-events-none"
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    <video
+                                      src={item.src}
+                                      preload="metadata"
+                                      muted
+                                      className="w-full h-full object-cover pointer-events-none"
+                                    />
+                                  )}
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/10 transition-colors pointer-events-none">
+                                    <div className="w-9 h-9 rounded-full bg-black/85 border border-primary/70 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(51,255,51,0.3)]">
+                                      <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  <div className="absolute bottom-1.5 left-1.5 bg-black/85 border border-primary/30 px-1.5 py-0.5 text-[8px] text-primary/80 tracking-widest font-mono uppercase pointer-events-none">
+                                    VIDEO
+                                  </div>
+                                </div>
                               ) : (
-                                <video
-                                  src={item.src}
-                                  preload="metadata"
-                                  muted
-                                  className="w-full h-full object-cover pointer-events-none"
-                                />
+                                <div className="relative w-full h-full bg-black flex items-center justify-center p-1.5">
+                                  <img
+                                    src={item.src}
+                                    alt={`${project.name} - ${item.title}`}
+                                    className="max-h-full max-w-full w-auto h-auto object-contain block select-none"
+                                    loading="lazy"
+                                  />
+                                  <div className="absolute bottom-1.5 left-1.5 bg-black/85 border border-primary/30 px-1.5 py-0.5 text-[8px] text-primary/80 tracking-widest font-mono uppercase pointer-events-none">
+                                    IMG {index + 1}/{mediaItems.length}
+                                  </div>
+                                </div>
                               )}
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/10 transition-colors pointer-events-none">
-                                <div className="w-8 h-8 rounded-full bg-black/85 border border-primary/70 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(51,255,51,0.3)]">
-                                  <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z" />
-                                  </svg>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {mediaItems.length > 1 && (
+                        <div className="flex justify-center items-center gap-1.5 pt-1">
+                          {mediaItems.map((_, i) => (
+                            <span
+                              key={i}
+                              className={`inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+                                activeMediaIndex === i ? 'bg-primary shadow-[0_0_6px_#33ff33]' : 'bg-gray-700'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* B. Original Desktop Collage View (Preserved for lg screens) */}
+                    <div className="hidden lg:flex relative w-full max-w-[540px] aspect-square lg:aspect-auto h-full max-h-[92%] items-center justify-center p-4">
+                      {mediaItems.map((item, index) => {
+                        const pos = getCollagePosition(index, mediaItems.length);
+                        const isActive = activeMediaIndex === index;
+                        const baseZIndex = (index + 1) * 2;
+
+                        const positionClass = `absolute focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer group ${
+                          isActive
+                            ? 'z-50 shadow-[0_15px_40px_rgba(0,0,0,0.9)]'
+                            : 'shadow-[0_5px_15px_rgba(0,0,0,0.6)] hover:z-40'
+                        }`;
+
+                        const style: React.CSSProperties = {
+                          transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                          zIndex: isActive ? 50 : baseZIndex,
+                          left: pos.left,
+                          top: pos.top,
+                          width: pos.width,
+                          height: pos.height,
+                          transform: `translate(${isActive ? '0, -4%' : '0, 0'}) rotate(${
+                            isActive ? '0deg' : pos.rotate
+                          }) scale(${isActive ? 1.04 : 1})`,
+                          border: `1px solid ${isActive ? 'rgba(51, 255, 51, 0.6)' : 'rgba(100, 100, 100, 0.35)'}`,
+                          backgroundColor: '#0a0a0a',
+                          filter: isActive ? 'brightness(1) grayscale(0)' : 'brightness(0.7) grayscale(0.5)',
+                        };
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMediaIndex(index);
+                              setZoomedMediaIndex(index);
+                              setImageScale(1);
+                            }}
+                            className={`overflow-hidden rounded-sm ${positionClass}`}
+                            style={style}
+                            aria-label={`View ${item.type}: ${item.title}`}
+                          >
+                            {item.type === 'video' ? (
+                              <div className="relative w-full h-full bg-black flex items-center justify-center">
+                                {item.poster ? (
+                                  <img
+                                    src={item.poster}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover pointer-events-none"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <video
+                                    src={item.src}
+                                    preload="metadata"
+                                    muted
+                                    className="w-full h-full object-cover pointer-events-none"
+                                  />
+                                )}
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/10 transition-colors pointer-events-none">
+                                  <div className="w-8 h-8 rounded-full bg-black/85 border border-primary/70 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(51,255,51,0.3)]">
+                                    <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="absolute bottom-1 left-1 bg-black/85 border border-primary/30 px-1.5 py-0.2 text-[8px] text-primary/80 tracking-widest font-mono uppercase pointer-events-none">
+                                  VIDEO
                                 </div>
                               </div>
-                              <div className="absolute bottom-1 left-1 bg-black/85 border border-primary/30 px-1.5 py-0.2 text-[8px] text-primary/80 tracking-widest font-mono uppercase pointer-events-none">
-                                VIDEO
-                              </div>
-                            </div>
-                          ) : (
-                            <img
-                              src={item.src}
-                              alt={`${project.name} - ${item.title}`}
-                              className="w-full h-full object-cover pointer-events-none select-none"
-                              loading="lazy"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                            ) : (
+                              <img
+                                src={item.src}
+                                alt={`${project.name} - ${item.title}`}
+                                className="w-full h-full object-cover pointer-events-none select-none"
+                                loading="lazy"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             </div>

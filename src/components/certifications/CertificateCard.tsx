@@ -80,6 +80,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ certificate, o
               onError={() => setImageError(true)}
               className="max-h-full max-w-full w-auto h-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] filter drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]"
               loading="lazy"
+              decoding="async"
             />
             {imageCount > 1 && (
               <div className="absolute top-2 right-2 bg-black/85 border border-primary/30 text-primary text-[9px] font-mono px-1.5 py-0.5 shadow-md flex items-center gap-1 pointer-events-none">
@@ -112,9 +113,9 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ certificate, o
         )}
       </div>
 
-      {/* ── Sliding Information Panel (remaining 30–35%; slides upward smoothly on hover to reveal description) ── */}
+      {/* ── Sliding Information Panel ── */}
       <div
-        className={`absolute bottom-0 left-0 right-0 z-20 bg-[#141414]/95 backdrop-blur-md border-t border-gray-800 p-3.5 sm:p-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_-6px_16px_rgba(0,0,0,0.8)] ${
+        className={`absolute bottom-0 left-0 right-0 z-20 bg-[#141414] border-t border-gray-800 p-3.5 sm:p-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_-6px_16px_rgba(0,0,0,0.8)] ${
           mobileExpanded ? 'bg-[#181818]' : ''
         }`}
       >

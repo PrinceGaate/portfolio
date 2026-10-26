@@ -45,11 +45,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         }
       }}
       aria-label={`View details for ${name}`}
-      className="cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary h-full block rounded-sm"
+      className="cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary h-full min-h-fit w-full block rounded-sm"
     >
       <Panel
         label={`PROJECT_${id.toUpperCase()}`}
-        className="flex flex-col h-full group hover:border-primary/40 transition-colors pointer-events-none"
+        className="flex flex-col h-full min-h-fit w-full group hover:border-primary/40 transition-colors pointer-events-none"
       >
         <div className="flex flex-col flex-1 h-full min-h-0 pointer-events-auto">
           {/* ── HEADER ── */}

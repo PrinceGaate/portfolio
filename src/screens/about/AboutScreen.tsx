@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { CommandPrompt } from '../../components/terminal/CommandPrompt';
 import type { AppState } from '../../types/navigation';
 import princeProfile from '../../assets/images/prince-profile.jpg';
 import { Panel } from '../../components/ui/Panel';
+import { useOverlay } from '../../hooks/useOverlay';
 
 interface AboutScreenProps {
   onNavigate: (screen: AppState) => void;
@@ -210,9 +210,11 @@ const PhotoLightbox: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
+export const AboutScreen: React.FC<AboutScreenProps> = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useOverlay(lightboxOpen, () => setLightboxOpen(false), 'about-photo-lightbox');
 
   // Fix for "OPENS FROM BOTTOM" bug
   useEffect(() => {
@@ -255,6 +257,8 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
                     src={princeProfile}
                     alt="Prince Gaate"
                     className="w-full h-full object-cover object-top"
+                    loading="lazy"
+                    decoding="async"
                     style={{ filter: 'grayscale(20%) contrast(1.05) brightness(0.9)' }}
                   />
                   <div
@@ -453,9 +457,6 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ onNavigate }) => {
         </div>
 
       </div>
-
-      {/* ── Pinned terminal prompt ── */}
-      <CommandPrompt onNavigate={onNavigate} />
     </div>
   );
 };

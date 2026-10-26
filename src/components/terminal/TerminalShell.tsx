@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useTerminal } from '../../hooks/useTerminal';
+import { useTerminal, isNavigationCommand } from '../../hooks/useTerminal';
+import { isMobileDevice } from '../../utils/device';
 import type { AppState } from '../../types/navigation';
 
 interface TerminalShellProps {
@@ -16,10 +17,21 @@ export const TerminalShell: React.FC<TerminalShellProps> = ({ onNavigate }) => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
+  useEffect(() => {
+    // Only auto-focus on desktop devices to avoid opening the virtual keyboard automatically on mobile
+    if (!isMobileDevice()) {
+      inputRef.current?.focus();
+    }
+  }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      executeCommand(input);
+      const trimmed = input.trim();
+      executeCommand(trimmed);
       setInput('');
+      if (isMobileDevice() || isNavigationCommand(trimmed)) {
+        inputRef.current?.blur();
+      }
     }
   };
 
@@ -54,7 +66,6 @@ export const TerminalShell: React.FC<TerminalShellProps> = ({ onNavigate }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           className="bg-transparent border-none outline-none flex-1 text-primary focus:ring-0 p-0 m-0 cursor-terminal"
-          autoFocus
         />
         {/* Fake caret overlay if needed, but native caret is fine for now */}
       </div>
